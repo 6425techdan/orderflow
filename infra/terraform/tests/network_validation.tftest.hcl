@@ -14,11 +14,11 @@ run "network_name_prefix_valid" {
   }
 
   variables {
-    name_prefix         = "of-dev"
-    location            = "eastus"
-    resource_group_name = "rg-orderflow-test"
-    vnet_address_space  = ["10.10.0.0/16"]
-    aks_subnet_prefix   = "10.10.0.0/22"
+    name_prefix             = "of-dev"
+    location                = "eastus"
+    resource_group_name     = "rg-orderflow-test"
+    vnet_address_space      = ["10.10.0.0/16"]
+    aks_subnet_prefix       = "10.10.0.0/22"
     endpoints_subnet_prefix = "10.10.4.0/24"
     tags = {
       project = "orderflow"

@@ -34,15 +34,15 @@ module "observability" {
 module "identity" {
   source = "../../modules/identity"
 
-  name                 = "${var.name_prefix}-uami-gha"
-  location             = var.location
-  resource_group_name  = module.network.resource_group_name
-  github_oidc_enabled  = var.github_oidc_enabled
-  github_organization  = var.github_organization
-  github_repository    = var.github_repository
-  github_entity_type   = "environment"
-  github_entity_name   = "prod-like"
-  tags                 = var.tags
+  name                = "${var.name_prefix}-uami-gha"
+  location            = var.location
+  resource_group_name = module.network.resource_group_name
+  github_oidc_enabled = var.github_oidc_enabled
+  github_organization = var.github_organization
+  github_repository   = var.github_repository
+  github_entity_type  = "environment"
+  github_entity_name  = "prod-like"
+  tags                = var.tags
 }
 
 module "acr" {

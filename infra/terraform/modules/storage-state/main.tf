@@ -7,7 +7,7 @@ resource "azurerm_storage_account" "tfstate" {
   min_tls_version          = var.min_tls_version
 
   # Prefer Azure AD for data plane; no account keys emitted from this module.
-  shared_access_key_enabled = true # required by azurerm backend today; rotate via Azure, never commit keys
+  shared_access_key_enabled       = true # required by azurerm backend today; rotate via Azure, never commit keys
   allow_nested_items_to_be_public = false
 
   blob_properties {

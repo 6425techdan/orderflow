@@ -75,13 +75,16 @@ jobs:
           upload-release-assets: false
 
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # v0.28.0
+        # Pin to post-incident safe SHA (trivy-action 0.35.0). Do not use mutable tags.
+        # See aquasecurity/trivy discussion #10425 (2026-03 supply-chain incident).
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
           image-ref: ${{ matrix.tag }}
           format: table
           exit-code: "1"
           severity: CRITICAL,HIGH
           ignore-unfixed: true
+          version: v0.69.3
 
       # Attestations (design only for this lab):
       # When publishing to a registry under OIDC, prefer:
