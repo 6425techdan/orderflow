@@ -139,7 +139,7 @@ When the lab is “done enough” for interviews:
 
 **Definition of done**
 
-- [ ] PR pipeline green on a sample change (requires remote push)
+- [x] PR pipeline green on a sample change (requires remote push)
 - [ ] Argo sync/rollback demonstrated on kind
 
 ---
@@ -195,7 +195,7 @@ When the lab is “done enough” for interviews:
 **Definition of done**
 
 - [x] Interview walkthrough executable for Compose path (kind optional)
-- [ ] README claims are evidence-backed after remote CI green
+- [x] README claims are evidence-backed after remote CI green
 
 ---
 
