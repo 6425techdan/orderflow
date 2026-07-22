@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: orderflow
+
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+  orderflow.lab/stack: reliability-lab
+
+resources:
+  - namespace.yaml
+  - postgres.yaml
+  - redis.yaml
+  - payment-mock-deployment.yaml
+  - order-api-deployment.yaml
+  - order-api-service.yaml
+  - order-worker-deployment.yaml
+  - pdb.yaml
+  - hpa.yaml
+
+images:
+  - name: orderflow/order-api
+    newTag: "0.1.0"
+  - name: orderflow/order-worker
+    newTag: "0.1.0"
+  - name: orderflow/payment-mock
+    newTag: "0.1.0"

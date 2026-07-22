@@ -1,0 +1,57 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namePrefix: ""
+
+commonLabels:
+  orderflow.lab/environment: staging
+
+images:
+  - name: orderflow/order-api
+    newTag: "0.1.0-staging"
+  - name: orderflow/order-worker
+    newTag: "0.1.0-staging"
+  - name: orderflow/payment-mock
+    newTag: "0.1.0-staging"
+
+patches:
+  - target:
+      kind: Deployment
+      name: order-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: staging
+  - target:
+      kind: Deployment
+      name: order-worker
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: staging
+  - target:
+      kind: Deployment
+      name: payment-mock
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: staging
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: order-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 2
+      - op: replace
+        path: /spec/maxReplicas
+        value: 6

@@ -1,0 +1,94 @@
+# OrderFlow symptom-oriented alert rules (Prometheus / PrometheusRule compatible)
+# Honesty: thresholds tuned for a local simulated lab, not a contractual SLA.
+#
+# Load into Prometheus via file_sd / rule_files, or adapt to PrometheusRule CRD:
+#   apiVersion: monitoring.coreos.com/v1
+#   kind: PrometheusRule
+#   ...
+#   spec:
+#     groups: <same groups below>
+
+groups:
+  - name: orderflow-symptoms
+    interval: 30s
+    rules:
+      - alert: OrderFlowPaymentErrors
+        expr: |
+          (
+            sum(rate(orderflow_payment_calls_total{result="failure"}[5m]))
+            /
+            clamp_min(sum(rate(orderflow_payment_calls_total[5m])), 0.001)
+          ) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          symptom: payment_dependency
+        annotations:
+          summary: "Payment dependency error rate elevated (lab)"
+          description: "Synthetic or fault-injected payment failures may be active."
+          runbook_url: "docs/runbooks/payment-dependency.md"
+
+      - alert: OrderFlowPaymentLatency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(orderflow_payment_latency_seconds_bucket[5m]))
+          ) > 1
+        for: 3m
+        labels:
+          severity: warning
+          symptom: payment_latency
+        annotations:
+          summary: "Payment dependency p95 latency high (lab)"
+          runbook_url: "docs/runbooks/high-order-latency.md"
+
+      - alert: OrderFlowHighOrderLatency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(orderflow_http_request_duration_seconds_bucket{service="order-api",route=~".*orders.*"}[5m]))
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          symptom: high_order_latency
+        annotations:
+          summary: "Order API accept path p95 latency high (lab)"
+          runbook_url: "docs/runbooks/high-order-latency.md"
+
+      - alert: OrderFlowQueueBacklog
+        expr: max(orderflow_queue_age_seconds) > 30 or max(orderflow_queue_depth) > 100
+        for: 3m
+        labels:
+          severity: warning
+          symptom: queue_backlog
+        annotations:
+          summary: "Order queue age or depth elevated (lab)"
+          runbook_url: "docs/runbooks/queue-backlog.md"
+
+      - alert: OrderFlowDbPoolExhaustion
+        expr: min(orderflow_db_pool_available) <= 1
+        for: 2m
+        labels:
+          severity: critical
+          symptom: db_exhaustion
+        annotations:
+          summary: "DB pool nearly exhausted (lab)"
+          description: "Check FAULT_DB_EXHAUST drill flag and pool sizing."
+
+      - alert: OrderFlowAvailabilityBurn
+        expr: |
+          (
+            1 - (
+              sum(rate(orderflow_http_requests_total{service="order-api",status=~"2.."}[5m]))
+              /
+              clamp_min(sum(rate(orderflow_http_requests_total{service="order-api"}[5m])), 0.001)
+            )
+          ) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+          symptom: availability_burn
+        annotations:
+          summary: "Lab availability error budget burn elevated"
+          description: "Pause risky deploys; follow error-budget policy in docs/slo-and-error-budget.md"

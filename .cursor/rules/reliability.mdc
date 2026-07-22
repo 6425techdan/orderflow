@@ -1,0 +1,12 @@
+---
+description: SLOs, probes, failure drills, docs match implementation
+alwaysApply: true
+---
+
+# Reliability
+
+- Treat SLOs, error budgets, probes, and alerting as first-class artifacts — not slideware.
+- When changing service behavior or deploy topology, update probes, dashboards, and runbooks as needed.
+- Failure drills and chaos exercises must be labeled honestly (scope, blast radius, simulated vs real).
+- Documentation must match implementation: if a probe, SLO, or drill step does not exist in code/config, do not claim it does.
+- Prefer measurable signals (latency, availability, correctness) over narrative-only “reliability” claims.

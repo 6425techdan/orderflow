@@ -1,0 +1,16 @@
+# Lab Alertmanager — UI + null receiver (no external paging).
+# Honesty: alerts are for local demo visibility, not on-call routing.
+
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: lab-null
+  group_by: ["alertname", "severity"]
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 1h
+
+receivers:
+  - name: lab-null
+    # No webhook/email — firing alerts still appear in Alertmanager UI (/#/alerts).

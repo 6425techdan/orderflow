@@ -1,0 +1,17 @@
+{
+  "incident_id": "FIX-queue-backlog",
+  "expected_root_cause_ids": ["queue_backlog"],
+  "request": {
+    "incident_id": "FIX-queue-backlog",
+    "alerts": [
+      {"name": "QueueAgeHigh", "summary": "queue age above SLO"}
+    ],
+    "telemetry_summary": {
+      "queue_age_seconds": 90,
+      "payment_success_ratio": 0.99
+    },
+    "deployment": {"version": "0.1.0"},
+    "runbook_excerpts": ["Inspect Redis stream depth and worker replicas."],
+    "mode": "fixture"
+  }
+}

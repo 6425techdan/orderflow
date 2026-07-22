@@ -1,0 +1,63 @@
+# Terraform fmt + validate only. Never apply from CI in this lab.
+# Paid Azure apply requires explicit human approval outside this workflow.
+
+name: terraform
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform.yml"
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fmt-validate:
+    name: fmt-and-validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.9.8"
+          terraform_wrapper: false
+
+      - name: Terraform fmt (check)
+        run: terraform fmt -check -recursive
+
+      - name: Validate modules (init -backend=false)
+        # Modules are the durable IaC surface today; env roots may be sparse until
+        # an approved Azure lab is created. Validate each module independently.
+        run: |
+          set -euo pipefail
+          for dir in modules/*/; do
+            echo "==> validating ${dir}"
+            (
+              cd "${dir}"
+              terraform init -backend=false -input=false
+              terraform validate
+            )
+          done
+
+      - name: Reminder — no apply
+        run: |
+          echo "This workflow intentionally omits terraform plan/apply against live Azure."
+          echo "See docs/oidc-azure.md and docs/cost-model.md before any human-approved apply."

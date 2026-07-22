@@ -1,0 +1,20 @@
+# Copy to terraform.tfvars (gitignored) — never commit secrets.
+# IDs below are non-secret Azure identifiers only.
+
+location            = "eastus"
+name_prefix         = "of-dev"
+resource_group_name = "rg-orderflow-dev"
+tenant_id           = "00000000-0000-0000-0000-000000000000" # replace with your tenant UUID
+
+acr_name                   = "acroforderflowdev" # must be globally unique
+key_vault_name             = "kv-orderflow-dev"
+state_storage_account_name = "stofdevtfstate" # must be globally unique
+
+aks_system_node_count = 1
+aks_system_vm_size    = "Standard_B2s"
+workload_identity_enabled = true
+
+# Leave false until GitHub org/repo are real and apply is approved.
+github_oidc_enabled  = false
+github_organization  = "REPLACE_GITHUB_ORG"
+github_repository    = "orderflow"

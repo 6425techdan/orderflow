@@ -1,0 +1,12 @@
+---
+description: Tests with behavior changes; no fabricated results
+alwaysApply: true
+---
+
+# Testing
+
+- Ship or update tests when behavior changes, unless an explicit justified exception is documented in the PR/plan.
+- **Never fabricate test results** — Do not invent pass/fail output, coverage numbers, or “green CI” claims.
+- Only report tests that were actually executed; include the command and observed outcome.
+- If tests could not run (missing deps, env, infra), say so clearly — do not imply success.
+- Prefer focused tests that assert the changed behavior over broad, flaky suites.

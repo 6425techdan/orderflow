@@ -1,0 +1,70 @@
+[project]
+name = "orderflow"
+version = "0.1.0"
+description = "6425 Reliability Lab: OrderFlow — fictional restaurant ordering reliability portfolio"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Dan Lewis" }]
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.32.0",
+  "pydantic>=2.9.0",
+  "pydantic-settings>=2.6.0",
+  "httpx>=0.27.0",
+  "redis>=5.2.0",
+  "psycopg[binary,pool]>=3.2.0",
+  "structlog>=24.4.0",
+  "opentelemetry-api>=1.28.0",
+  "opentelemetry-sdk>=1.28.0",
+  "opentelemetry-exporter-otlp-proto-http>=1.28.0",
+  "opentelemetry-instrumentation-fastapi>=0.49b0",
+  "opentelemetry-instrumentation-httpx>=0.49b0",
+  "opentelemetry-instrumentation-logging>=0.49b0",
+  "prometheus-client>=0.21.0",
+  "eval_type_backport>=0.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0",
+  "pytest-asyncio>=0.24.0",
+  "ruff>=0.8.0",
+  "mypy>=1.13.0",
+  "types-redis",
+]
+
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["packages/orderflow_common"]
+include = ["orderflow_common*"]
+
+[tool.setuptools.package-data]
+orderflow_common = ["py.typed"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = [
+  "packages/orderflow_common",
+  "apps/order-api",
+  "apps/order-worker",
+  "apps/payment-mock",
+  "apps/incident-assistant",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["UP045"]
+
+[tool.mypy]
+python_version = "3.9"
+ignore_missing_imports = true
+warn_unused_ignores = false

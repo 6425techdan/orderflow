@@ -1,0 +1,12 @@
+---
+description: Plan before large changes; inspect existing code first
+alwaysApply: true
+---
+
+# Planning
+
+- For multi-file, architectural, infra, or reliability-surface changes: produce a short plan before implementing.
+- Inspect existing code, docs, and adjacent tests first; extend current patterns instead of inventing parallel ones.
+- State objective, constraints, assumptions, acceptance criteria, and out-of-scope items.
+- Do not jump into large implementation from a vague prompt — clarify via plan and repo evidence.
+- Simple one-file or obvious fixes may skip a formal plan; still read surrounding code.

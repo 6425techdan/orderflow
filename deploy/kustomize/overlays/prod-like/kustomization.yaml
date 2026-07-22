@@ -1,0 +1,77 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+commonLabels:
+  orderflow.lab/environment: prod-like
+
+images:
+  - name: orderflow/order-api
+    newTag: "0.1.0"
+  - name: orderflow/order-worker
+    newTag: "0.1.0"
+  - name: orderflow/payment-mock
+    newTag: "0.1.0"
+
+patches:
+  - target:
+      kind: Deployment
+      name: order-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: prod-like
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 100m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 256Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 768Mi
+  - target:
+      kind: Deployment
+      name: order-worker
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: prod-like
+  - target:
+      kind: Deployment
+      name: payment-mock
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: prod-like
+  - target:
+      kind: PodDisruptionBudget
+      name: payment-mock
+    patch: |-
+      - op: replace
+        path: /spec/minAvailable
+        value: 1
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: order-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+      - op: replace
+        path: /spec/maxReplicas
+        value: 8

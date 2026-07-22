@@ -1,0 +1,45 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: order-api
+  namespace: orderflow
+  labels:
+    app.kubernetes.io/name: order-api
+    app.kubernetes.io/part-of: orderflow
+    orderflow.lab/purpose: local-reliability-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: order-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: order-worker
+  namespace: orderflow
+  labels:
+    app.kubernetes.io/name: order-worker
+    app.kubernetes.io/part-of: orderflow
+    orderflow.lab/purpose: local-reliability-lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: order-worker
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: payment-mock
+  namespace: orderflow
+  labels:
+    app.kubernetes.io/name: payment-mock
+    app.kubernetes.io/part-of: orderflow
+    orderflow.lab/purpose: local-reliability-lab
+spec:
+  # Single-replica lab dependency: allow voluntary disruption for drills.
+  minAvailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: payment-mock

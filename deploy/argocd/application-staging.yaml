@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: orderflow-staging
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: orderflow
+    orderflow.lab/environment: staging
+    orderflow.lab/purpose: local-reliability-lab
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: orderflow
+  source:
+    # Replace with your git remote when wiring a real Argo CD instance.
+    repoURL: https://github.com/example/orderflow.git
+    targetRevision: HEAD
+    path: deploy/kustomize/overlays/staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: orderflow
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 1m
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+  revisionHistoryLimit: 10

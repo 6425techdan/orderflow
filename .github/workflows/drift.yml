@@ -1,0 +1,67 @@
+# Drift detection intent (plan-only).
+# This scheduled workflow documents how OrderFlow would detect Terraform drift
+# without applying changes. It does NOT call Azure and does NOT create resources.
+#
+# Enabling real `terraform plan` against a remote state requires:
+#   1. Human approval for paid Azure / state storage
+#   2. OIDC federation (docs/oidc-azure.md) — no long-lived secrets
+#   3. Read-only Azure role assignment for the GitHub environment identity
+
+name: drift
+
+on:
+  schedule:
+    # Mondays 14:00 UTC — lab reminder cadence, not a production SLA.
+    - cron: "0 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift-intent:
+    name: document-drift-plan-only
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Drift detection design (no Azure calls)
+        run: |
+          cat <<'EOF'
+          OrderFlow drift detection (lab design)
+          ======================================
+
+          Intent
+          ------
+          Periodically run `terraform plan -detailed-exitcode` against an approved
+          remote state backend and fail the job when exit code 2 (changes detected).
+
+          Constraints for this repository
+          -------------------------------
+          - No terraform apply from CI (ever, without a separate protected workflow).
+          - No paid Azure resources created by this workflow.
+          - Prefer GitHub OIDC → Azure AD federated credential (docs/oidc-azure.md).
+          - Use a dedicated GitHub Environment (e.g. azure-plan-readonly) with
+            required reviewers for any job that can obtain cloud credentials.
+          - Plan-only identity: Reader + Terraform state read; never Contributor.
+
+          Suggested future job (NOT enabled)
+          ----------------------------------
+          1. OIDC login to Azure (azure/login pinned to full SHA).
+          2. terraform init with remote backend.
+          3. terraform plan -detailed-exitcode -out=tfplan.
+          4. Upload plan artifact; open an issue or notify on drift.
+          5. Human decides whether drift is expected (manual change) or a bug.
+
+          Local substitute today
+          ----------------------
+          Use Compose/kind as the source of truth for day-to-day demos. Optional
+          Azure modules under infra/terraform remain STOP-gated.
+
+          Honesty
+          -------
+          This scheduled run only documents intent. A green check here does not
+          mean Azure inventory matches Terraform state.
+          EOF

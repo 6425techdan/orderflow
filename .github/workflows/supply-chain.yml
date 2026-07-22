@@ -1,0 +1,91 @@
+# Supply-chain checks for OrderFlow images (lab).
+# Does not push images or attest to a production registry unless explicitly extended.
+# STOP: do not configure paid cloud registries without approval.
+
+name: supply-chain
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "apps/**/Dockerfile"
+      - "packages/**"
+      - "pyproject.toml"
+      - ".github/workflows/supply-chain.yml"
+  pull_request:
+    paths:
+      - "apps/**/Dockerfile"
+      - "packages/**"
+      - "pyproject.toml"
+      - ".github/workflows/supply-chain.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # Uncomment when enabling attestation upload:
+  # id-token: write
+  # attestations: write
+  # packages: write
+
+concurrency:
+  group: supply-chain-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image-sbom-scan:
+    name: build-sbom-trivy
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: order-api
+            dockerfile: apps/order-api/Dockerfile
+            tag: orderflow/order-api:sc
+          - name: order-worker
+            dockerfile: apps/order-worker/Dockerfile
+            tag: orderflow/order-worker:sc
+          - name: payment-mock
+            dockerfile: apps/payment-mock/Dockerfile
+            tag: orderflow/payment-mock:sc
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5 # v3.8.0
+
+      - name: Build image (load locally; no push)
+        uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          load: true
+          push: false
+          tags: ${{ matrix.tag }}
+
+      - name: Generate SBOM (Syft via Anchore)
+        uses: anchore/sbom-action@df80a981bc6edbc4e220a492d3cbe9f5547a6e75 # v0.17.9
+        with:
+          image: ${{ matrix.tag }}
+          format: spdx-json
+          output-file: sbom-${{ matrix.name }}.spdx.json
+          upload-artifact: true
+          upload-release-assets: false
+
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2 # v0.28.0
+        with:
+          image-ref: ${{ matrix.tag }}
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+      # Attestations (design only for this lab):
+      # When publishing to a registry under OIDC, prefer:
+      #   - actions/attest-build-provenance (pinned SHA)
+      #   - cosign keyless signing against the same OIDC identity
+      # Do not store long-lived registry passwords in GitHub secrets.
+      # See docs/oidc-azure.md for Azure-facing identity design.

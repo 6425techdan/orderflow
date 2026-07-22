@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: orderflow
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: orderflow
+    orderflow.lab/purpose: local-reliability-lab
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: OrderFlow reliability lab GitOps project (lab-only; not a paid cloud tenant).
+  sourceRepos:
+    - "*"
+  destinations:
+    - namespace: orderflow
+      server: https://kubernetes.default.svc
+    - namespace: "orderflow-*"
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: "*"
+    - group: apps
+      kind: "*"
+    - group: autoscaling
+      kind: "*"
+    - group: policy
+      kind: "*"
+    - group: networking.k8s.io
+      kind: "*"
+  orphanedResources:
+    warn: true

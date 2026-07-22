@@ -1,0 +1,54 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Virtualenvs
+.venv/
+venv/
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+secrets/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+*_override.tf
+.terraform.lock.hcl.bak
+
+# Kubernetes / kind
+kubeconfig*
+kind-config-*.yaml
+.local/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local data
+data/
+tmp/
+*.log
+
+# SBOM / scan artifacts
+sbom*.json
+trivy-report*.json

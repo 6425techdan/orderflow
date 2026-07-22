@@ -1,0 +1,12 @@
+---
+description: Secrets, cloud approval, destructive ops, supply-chain care
+alwaysApply: true
+---
+
+# Security
+
+- **No secrets in the repo** — Never commit `.env`, credentials, tokens, private keys, or authenticated kubeconfigs. Use `.env.example` / placeholders only.
+- **No cloud without approval** — Do not create paid cloud resources, change billing, or open public exposure without explicit human approval. Prefer local-first.
+- **No destructive actions without approval** — No force-push to main, hard reset of shared history, cluster wipe, data deletion, or irreversible infra destroy without explicit approval.
+- **Supply-chain care** — Prefer pinned, reviewed dependencies; avoid unexplained new packages; do not weaken lockfiles or CI security checks without justification.
+- Report suspected secret exposure immediately; do not continue as if it did not happen.

@@ -1,0 +1,59 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+commonLabels:
+  orderflow.lab/environment: local
+
+images:
+  - name: orderflow/order-api
+    newName: orderflow/order-api
+    newTag: local
+  - name: orderflow/order-worker
+    newName: orderflow/order-worker
+    newTag: local
+  - name: orderflow/payment-mock
+    newName: orderflow/payment-mock
+    newTag: local
+
+patches:
+  - target:
+      kind: Deployment
+      name: order-api
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: local
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+  - target:
+      kind: Deployment
+      name: order-worker
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: local
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+  - target:
+      kind: Deployment
+      name: payment-mock
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: local
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Never
+  # kind often has no metrics-server; keep HPA present but document that it may stay inactive.
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: order-api
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicas
+        value: 4

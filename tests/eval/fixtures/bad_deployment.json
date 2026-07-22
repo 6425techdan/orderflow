@@ -1,0 +1,17 @@
+{
+  "incident_id": "FIX-bad-deploy",
+  "expected_root_cause_ids": ["bad_deployment"],
+  "request": {
+    "incident_id": "FIX-bad-deploy",
+    "alerts": [
+      {"name": "ErrorBudgetBurn", "summary": "burn rate high after deployment"}
+    ],
+    "telemetry_summary": {
+      "recent_deploy": true,
+      "api_5xx_ratio": 0.2
+    },
+    "deployment": {"version": "0.1.1-bad"},
+    "runbook_excerpts": ["Rollback using docs/runbooks/rollback.md"],
+    "mode": "fixture"
+  }
+}

@@ -1,0 +1,12 @@
+---
+description: Keep docs current; separate facts, assumptions, recommendations
+alwaysApply: true
+---
+
+# Documentation
+
+- Update relevant docs when making architectural, operational, or reliability changes.
+- Prefer editing canonical docs over duplicating guidance in chat or one-off notes.
+- Clearly label **facts** (verified in repo/runtime), **assumptions**, and **recommendations**.
+- Do not document aspirational features as shipped.
+- Keep runbooks and ADRs aligned with what operators can actually do today.

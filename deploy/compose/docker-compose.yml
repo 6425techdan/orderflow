@@ -1,0 +1,174 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: orderflow
+      POSTGRES_PASSWORD: orderflow
+      POSTGRES_DB: orderflow
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orderflow -d orderflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  payment-mock:
+    build:
+      context: ../..
+      dockerfile: apps/payment-mock/Dockerfile
+    environment:
+      SERVICE_NAME: payment-mock
+      OTEL_ENABLED: "false"
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8082/healthz')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  order-api:
+    build:
+      context: ../..
+      dockerfile: apps/order-api/Dockerfile
+    environment:
+      SERVICE_NAME: order-api
+      DATABASE_URL: postgresql://orderflow:orderflow@postgres:5432/orderflow
+      REDIS_URL: redis://redis:6379/0
+      PAYMENT_URL: http://payment-mock:8082
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_ENABLED: "true"
+      DEPLOY_ENV: local
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      payment-mock:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  order-worker:
+    build:
+      context: ../..
+      dockerfile: apps/order-worker/Dockerfile
+    environment:
+      SERVICE_NAME: order-worker
+      DATABASE_URL: postgresql://orderflow:orderflow@postgres:5432/orderflow
+      REDIS_URL: redis://redis:6379/0
+      PAYMENT_URL: http://payment-mock:8082
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_ENABLED: "true"
+      DEPLOY_ENV: local
+      METRICS_PORT: "8081"
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      payment-mock:
+        condition: service_healthy
+      order-api:
+        condition: service_started
+
+  incident-assistant:
+    build:
+      context: ../..
+      dockerfile: apps/incident-assistant/Dockerfile
+    environment:
+      SERVICE_NAME: incident-assistant
+      OTEL_ENABLED: "false"
+    ports:
+      - "8083:8083"
+    depends_on:
+      - order-api
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.114.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ../../observability/otel-collector/config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8889:8889"
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-lifecycle
+    volumes:
+      - ../../observability/otel-collector/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../../observability/alerts/rules.yml:/etc/prometheus/rules.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - otel-collector
+      - order-api
+      - order-worker
+      - payment-mock
+      - alertmanager
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    command:
+      - --config.file=/etc/alertmanager/config.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ../../observability/alertmanager/config.yml:/etc/alertmanager/config.yml:ro
+    ports:
+      - "9093:9093"
+
+  loki:
+    image: grafana/loki:3.2.1
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    ports:
+      - "3100:3100"
+
+  tempo:
+    image: grafana/tempo:2.6.1
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ../../observability/otel-collector/tempo.yaml:/etc/tempo.yaml:ro
+    ports:
+      - "3200:3200"
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ../../observability/dashboards:/var/lib/grafana/dashboards:ro
+      - ../../observability/otel-collector/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ../../observability/otel-collector/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
+volumes:
+  pgdata:

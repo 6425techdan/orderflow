@@ -1,0 +1,17 @@
+{
+  "incident_id": "FIX-payment-fail",
+  "expected_root_cause_ids": ["payment_provider_failure"],
+  "request": {
+    "incident_id": "FIX-payment-fail",
+    "alerts": [
+      {"name": "PaymentDependencyFailure", "summary": "payment 5xx elevated"}
+    ],
+    "telemetry_summary": {
+      "payment_success_ratio": 0.4,
+      "queue_age_seconds": 12
+    },
+    "deployment": {"version": "0.1.0"},
+    "runbook_excerpts": ["Check payment-mock faults and worker DLQ."],
+    "mode": "fixture"
+  }
+}

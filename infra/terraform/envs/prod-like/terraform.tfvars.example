@@ -1,0 +1,19 @@
+# Copy to terraform.tfvars (gitignored) — never commit secrets.
+
+location            = "eastus"
+name_prefix         = "of-plike"
+resource_group_name = "rg-orderflow-prod-like"
+tenant_id           = "00000000-0000-0000-0000-000000000000" # replace with your tenant UUID
+
+acr_name                   = "acroforderflowplike" # must be globally unique
+key_vault_name             = "kv-orderflow-plike"
+state_storage_account_name = "stofpliketfstate" # must be globally unique
+
+# Modestly larger than envs/dev — still a lab, not production capacity.
+aks_system_node_count = 2
+aks_system_vm_size    = "Standard_B4ms"
+workload_identity_enabled = true
+
+github_oidc_enabled  = false
+github_organization  = "REPLACE_GITHUB_ORG"
+github_repository    = "orderflow"
